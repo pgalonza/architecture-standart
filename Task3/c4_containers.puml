@@ -21,7 +21,7 @@ System_Boundary(bank, "Банк – Стандарт") {
 
     Container_Boundary(internet_bank, "Интернет-банк") {
         Container(bank_online, "Интернет Банк", "ASP.NET MVC 4.5", "Монолит")
-        ContainerDb(bank_online_db, "База данных интернет-банка", "MS SQL", "Хранит данные о депозитах")
+        ContainerDb(bank_online_db, "База данных интернет-банка", "MS SQL")
         Rel(bank_online, bank_online_db, "чтение/запись", "SQL")
     }
 
@@ -57,7 +57,10 @@ System_Boundary(bank, "Банк – Стандарт") {
     Rel(deposits_backend, message_broker, "AMQP")
     Rel(abs_connector, message_broker, "AMQP")
     Rel(bank_online, api_gateway_out, "AMQP")
+    Rel(call_center_backend, message_broker, "AMQP")
     Rel(call_center_backend, api_gateway_out, "HTTPS")
+    Rel(bank_online, deposits_backend, "HTTPS")
+    Rel(web_site_backend, deposits_backend, "HTTPS")
 
 }
 
