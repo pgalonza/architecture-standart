@@ -1,0 +1,25 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Диаграмма контекста
+
+Person_Ext(client, "Клиент", "Клиент-банка")
+Person(front_office, "Менеджер", "фронт-офис")
+Person(back_office, "Менеджер", "бэк-офис")
+Person(call_center_operator, "Сотрудник кол-центра")
+
+System(banking_system, "Банк Стандарт", "Инфраструктура банка")
+
+System_Ext(partner_call_system, "Партнёрский кол-центр", "Внешняя система")
+System_Ext(telecom, "Телеком-оператор", "Внешний оператор СМС")
+
+Rel(client, banking_system, "Взаиможействие с Веб-сайтом/интернет-банком/оператором")
+Rel(front_office, banking_system, "Обслуживание клиента в офисе")
+Rel(back_office, banking_system, "Работа с депозитными заявками")
+Rel(call_center_operator, banking_system, "Работа с звонками от клиентов")
+Rel(partner_call_system, banking_system, "Работа по скриптам")
+
+Rel(banking_system, telecom, "SMS-уведомления")
+Rel(telecom, client, "SMS-уведомления")
+
+@enduml

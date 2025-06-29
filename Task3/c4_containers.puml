@@ -1,0 +1,79 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Диаграмма контейнеров
+
+Person_Ext(client, "Клиент", "Клиент-банка")
+System_Ext(callcenter, "Кол-центр", "Клиент-серверная система на платформе подрядчика")
+System_Ext(sms_operator, "Сервис отправки СМС", "Внешний оператор по отправке СМС")
+Person(callcenter_manager, "Менеджер Кол-центра", "Внутренний сотрудник")
+Person(manager, "Менеджер", "Фронт/бэк офса")
+
+System_Boundary(bank, "Банк – Стандарт") {
+    Container(api_gateway_in, "API Gateway IN", "Nginx", "Единая точка входа")
+    Container(api_gateway_out, "API Gateway OUT", "Nginx", "Единая точка выхода")
+
+    Container_Boundary(web_site, "Веб-сайт") {
+        Container(web_site_frontend, "Веб-сайт фронт", "React", "Отображение депозитов, сбор заявок")
+        Container(web_site_backend, "Веб-сайт бэк", "PHP")
+        Rel(web_site_frontend, web_site_backend, "чтение/запись", "SQL")
+    }
+
+    Container_Boundary(internet_bank, "Интернет-банк") {
+        Container(bank_online, "Интернет Банк", "ASP.NET MVC 4.5", "Монолит")
+        ContainerDb(bank_online_db, "База данных интернет-банка", "MS SQL")
+        Rel(bank_online, bank_online_db, "чтение/запись", "SQL")
+    }
+
+    Container_Boundary(abs, "АБС") {
+        Container(abs_connector, "Адаптер АБС", "Java", "Реализует интерфейс взаимодействия с АБС")
+        Container(abs_client, "Десктопное приложение", "Delphi", "Основной инструмент работы менеджеров")
+        ContainerDb(abs_db, "База данных АБС", "Oracle", "Хранит данные. Выполняет бизнес-логику через хранимые процедуры")
+        Rel(abs_client, abs_db, "чтение/запись", "SQL")
+        Rel(abs_connector, abs_db, "чтение/запись", "SQL")
+    }
+
+    Container_Boundary(deposits_service, "Сервис депозитов") {
+        Container(deposits_backend, "Cервиса депозитов бэк", "Java", "Бэкенд для работы с депозитами")
+        ContainerDb(deposits_db, "База данных депозитов", "PostgreSQL", "Хранит данные о депозитах")
+        Rel(deposits_backend, deposits_db, "чтение/запись", "SQL")
+    }
+
+    Container_Boundary(call_center_service, "Система кол-центра") {
+        Container(call_center_frontend, "Веб-интерфейс", "React")
+        Container(call_center_backend, "Кол-цетр бэк", "Spring Boot")
+        ContainerDb(call_center_db, "База данных депозитов", "PostgreSQL")
+        Rel(call_center_frontend, call_center_backend, "HTTPS")
+        Rel(call_center_backend, call_center_db, "чтение/запись", "SQL")
+    }
+
+    Container(message_broker, "Брокер сообщений", "Rabbit MQ")
+
+    Rel(api_gateway_in, bank_online, "HTTPS")
+    Rel(api_gateway_in, web_site_frontend, "HTTPS")
+    Rel(api_gateway_in, call_center_frontend, "HTTPS")
+    Rel(web_site_backend, message_broker, "AMQP")
+    Rel(bank_online, message_broker, "AMQP")
+    Rel(deposits_backend, message_broker, "AMQP")
+    Rel(abs_connector, message_broker, "AMQP")
+    Rel(bank_online, api_gateway_out, "AMQP")
+    Rel(call_center_backend, message_broker, "AMQP")
+    Rel(call_center_backend, api_gateway_out, "HTTPS")
+    Rel(bank_online, deposits_backend, "HTTPS")
+    Rel(web_site_backend, deposits_backend, "HTTPS")
+
+}
+
+Rel(api_gateway_out, sms_operator, "HTTPS")
+Rel(api_gateway_out, callcenter, "HTTPS")
+Rel(sms_operator, client, "SMS")
+Rel(client, api_gateway_in, "HTTPS")
+Rel(callcenter_manager, api_gateway_in, "HTTPS")
+Rel(manager, api_gateway_in, "HTTPS")
+Rel(call_center_backend, client, "Звонок")
+Rel(callcenter, client, "Звонок")
+
+@enduml
+
+@enduml
+

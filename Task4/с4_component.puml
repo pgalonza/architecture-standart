@@ -1,0 +1,36 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Диаграмма компонентов
+
+Person(callcenter_manager, "Оператор кол-центра")
+System_Ext(callcenter, "Кол-центр", "Клиент-серверная система на платформе подрядчика")
+
+System_Boundary(bank, "Банк Стандарт"){
+    Container(message_broker, "Брокер сообщений", "Rabbit MQ", "Передача сообщений между сервисами")
+    Container(deposits_backend, "Cервиса депозитов бэк", "Java", "Бэкенд для работы с депозитами")
+    ContainerDb(deposits_db, "База данных депозитов", "PostgreSQL", "Хранит данные о депозитах")
+    Container(sftp_server, "SFTP Сервер", "Linux", "SFTP сервер для публикации ставок по депозитам")
+    Container(call_center, "Cистема кол-центра", "Прием звонков и заявок от клиентов")
+
+    Container_Boundary(deposit_publication_service, "Сервис публикации ставок по депозитам") {
+        Component(sftp_client, "SFTP Клиент",  "Клиент для публикации информации")
+        Component(data_format, "Компонент преобразования данных",  "Преобразует данных в нужный формат")
+        Component(queue_connector, "Коннектор к очереди",  "Подключение к очереди и получение данных")
+
+        Rel(data_format, sftp_client, "Преобразование данных и передача на публикацию")
+        Rel(queue_connector, data_format, "Передача данных на преобразование")
+
+    }
+
+    Rel(queue_connector, message_broker, "Получение данных из очереди", "AMQP")
+    Rel(sftp_client, sftp_server, "Отправка ставок по депозитам", "SFTP")
+    Rel(deposits_backend, deposits_db, "чтение/запись", "SQL")
+    Rel(deposits_backend, message_broker, "Отправка ставок по депозитам", "AMQP")
+    Rel(call_center, message_broker, "Получение актуальных ставок", "AMQP")
+}
+
+Rel(callcenter_manager, call_center, "Принимает звонки и заявки от клиентов", "Телефон")
+Rel(callcenter, sftp_server, "Запрашивает ставки по депозитам", "SFTP")
+
+@enduml
